@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"net"
+	"net/netip"
 	"slices"
 	"sync"
 	"time"
@@ -13,8 +14,8 @@ const dialTimeout = 500 * time.Millisecond
 const workerCount = 1024
 
 type Scanner struct {
-	ip    net.IP
-	ports []PortRange
+	address netip.Addr
+	ports   []PortRange
 }
 
 type ScannedPort struct {
@@ -34,8 +35,8 @@ func NewScanner(host, ports string) (*Scanner, error) {
 	}
 
 	return &Scanner{
-		ports: portRanges,
-		ip:    ip,
+		ports:   portRanges,
+		address: ip,
 	}, nil
 }
 
@@ -84,7 +85,7 @@ func (s *Scanner) worker(jobs <-chan uint16, results chan<- ScannedPort, wg *syn
 	dialer := net.Dialer{Timeout: dialTimeout}
 
 	for port := range jobs {
-		address := net.JoinHostPort(s.ip.String(), fmt.Sprint(port))
+		address := net.JoinHostPort(s.address.String(), fmt.Sprint(port))
 		conn, err := dialer.Dial("tcp", address)
 		if err == nil {
 			conn.Close()
