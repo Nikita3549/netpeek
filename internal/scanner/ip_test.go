@@ -1,52 +1,52 @@
 package scanner
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 )
 
 func TestResolveIp(t *testing.T) {
 	tests := []struct {
-		name    string
-		host    string
-		wantErr bool
-		wantIP  net.IP
+		name        string
+		host        string
+		wantErr     bool
+		wantAddress netip.Addr
 	}{
 		{
-			name:    "valid IPv4",
-			host:    "8.8.8.8",
-			wantErr: false,
-			wantIP:  net.ParseIP("8.8.8.8"),
+			name:        "valid IPv4",
+			host:        "8.8.8.8",
+			wantErr:     false,
+			wantAddress: generateAddress("8.8.8.8"),
 		},
 		{
-			name:    "valid IPv6",
-			host:    "::1",
-			wantErr: true,
-			wantIP:  net.ParseIP("::1"),
+			name:        "valid IPv6",
+			host:        "::1",
+			wantErr:     false,
+			wantAddress: generateAddress("::1"),
 		},
 		{
-			name:    "valid hostname",
-			host:    "localhost",
-			wantErr: false,
-			wantIP:  net.ParseIP("127.0.0.1"),
+			name:        "valid hostname",
+			host:        "localhost",
+			wantErr:     false,
+			wantAddress: generateAddress("127.0.0.1"),
 		},
 		{
-			name:    "invalid host",
-			host:    "test.xyz",
-			wantErr: true,
-			wantIP:  nil,
+			name:        "invalid host",
+			host:        "test.xyz",
+			wantErr:     true,
+			wantAddress: netip.Addr{},
 		},
 		{
-			name:    "empty string",
-			host:    "",
-			wantErr: true,
-			wantIP:  nil,
+			name:        "empty string",
+			host:        "",
+			wantErr:     true,
+			wantAddress: netip.Addr{},
 		},
 		{
-			name:    "garbage input",
-			host:    "not an ip!!!",
-			wantErr: true,
-			wantIP:  nil,
+			name:        "garbage input",
+			host:        "not an ip!!!",
+			wantErr:     true,
+			wantAddress: netip.Addr{},
 		},
 	}
 
@@ -60,16 +60,22 @@ func TestResolveIp(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				if got == nil {
-					t.Errorf("resolveIp(%q) got = nil, want = %v", tt.host, tt.wantIP)
+				if !got.IsValid() {
+					t.Errorf("resolveIp(%q) got = nil, want = %v", tt.host, tt.wantAddress)
 					return
 				}
 
-				if !got.Equal(tt.wantIP) {
-					t.Errorf("resolveIp(%q) got = %v, want = %v", tt.host, got, tt.wantIP)
+				if got != tt.wantAddress {
+					t.Errorf("resolveIp(%q) got = %v, want = %v", tt.host, got, tt.wantAddress)
 					return
 				}
 			}
 		})
 	}
+}
+
+func generateAddress(address string) netip.Addr {
+	addr, _ := netip.ParseAddr(address)
+
+	return addr
 }

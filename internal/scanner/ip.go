@@ -3,31 +3,33 @@ package scanner
 import (
 	"fmt"
 	"net"
+	"net/netip"
 )
 
-func resolveIP(host string) (net.IP, error) {
-	if IP := net.ParseIP(host); IP != nil {
-		IPv4 := IP.To4()
-
-		if IPv4 == nil {
-			return nil, fmt.Errorf("provided IP is not IPv4")
-		}
-
-		return IPv4, nil
+func resolveIP(host string) (netip.Addr, error) {
+	if address, err := netip.ParseAddr(host); err == nil {
+		return address, nil
 	}
 
 	IPs, err := net.LookupHost(host)
 	if err != nil || len(IPs) == 0 {
-		return nil, fmt.Errorf("failed to resolve host %q: %v", host, err)
+		return netip.Addr{}, fmt.Errorf("failed to resolve host %q: %v", host, err)
 	}
 
+	var fallback netip.Addr
 	for _, IP := range IPs {
-		IPv4 := net.ParseIP(IP).To4()
+		address, _ := netip.ParseAddr(IP)
 
-		if IPv4 != nil {
-			return IPv4, nil
+		if address.Is4() {
+			return address, nil
+		}
+		if address.Is6() {
+			fallback = address
 		}
 	}
+	if fallback.IsValid() {
+		return fallback, nil
+	}
 
-	return nil, fmt.Errorf("host %q has no IPv4 addresses (IPv6 not supported)", host)
+	return netip.Addr{}, fmt.Errorf("couldn't resolve host %q", host)
 }
