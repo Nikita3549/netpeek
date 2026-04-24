@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"netpeek/internal/scanner"
 	"time"
 
@@ -27,23 +26,22 @@ var scanCmd = &cobra.Command{
 }
 
 func runScan(cmd *cobra.Command, args []string) error {
-	defer trackTime(time.Now(), "Scanning")
-	
-	s, err := scanner.NewScanner(host, ports)
 
+	s, err := scanner.NewScanner(host, ports)
 	if err != nil {
 		return err
 	}
 
-	result, err := s.Scan()
-	for _, res := range result {
-		fmt.Printf("port: %v, opened: %v\n", res.Port, res.Opened)
-	}
+	p := scanner.NewPrinter(s.Stats.Total)
+	p.OutputInitialText(host, ports)
+	defer trackTime(time.Now(), "Scanning", p, s)
 
-	return nil
+	_, err = s.Scan(p)
+
+	return err
 }
 
-func trackTime(now time.Time, name string) {
-	elapsed := time.Since(now)
-	fmt.Printf("\n%s took %.2f seconds\n", name, elapsed.Seconds())
+func trackTime(now time.Time, name string, p *scanner.Printer, s *scanner.Scanner) {
+	elapsed := time.Since(now).Seconds()
+	p.OutputFinalStats(s.Stats.Opened, s.Stats.Closed, elapsed)
 }

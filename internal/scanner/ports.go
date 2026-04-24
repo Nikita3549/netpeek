@@ -11,17 +11,21 @@ type PortRange struct {
 	End   uint16
 }
 
+type totalPorts int
+
 const minPort = 1
 const maxPort = 65535
 
 // Allowed format: all or 80-1024,80-81,443
-func parsePorts(ports string) ([]PortRange, error) {
+func parsePorts(ports string) ([]PortRange, totalPorts, error) {
+	var total totalPorts
+
 	if ports == "all" {
 		return []PortRange{
 			{
 				Start: minPort,
 				End:   maxPort,
-			}}, nil
+			}}, maxPort, nil
 	}
 
 	portsList := strings.Split(ports, ",")
@@ -34,36 +38,38 @@ func parsePorts(ports string) ([]PortRange, error) {
 			portUint16, err := toUint16Port(portRange)
 
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
+			total++
 			portRanges = append(portRanges, PortRange{Start: portUint16, End: portUint16})
 		} else {
 			portsString := strings.Split(portRange, "-")
 
 			if len(portsString) != 2 {
-				return nil, fmt.Errorf("invalid ports range: %q", portsString)
+				return nil, 0, fmt.Errorf("invalid ports range: %q", portsString)
 			}
 
 			start, err := toUint16Port(portsString[0])
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
 			end, err := toUint16Port(portsString[1])
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
 			if start > end {
-				return nil, fmt.Errorf("start port can't be greater than end port: %q", portRange)
+				return nil, 0, fmt.Errorf("start port can't be greater than end port: %q", portRange)
 			}
 
+			total += totalPorts(end - start + 1)
 			portRanges = append(portRanges, PortRange{Start: start, End: end})
 		}
 	}
 
-	return portRanges, nil
+	return portRanges, total, nil
 }
 
 func toUint16Port(port string) (uint16, error) {

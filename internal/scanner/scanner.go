@@ -16,6 +16,13 @@ const workerCount = 1024
 type Scanner struct {
 	address netip.Addr
 	ports   []PortRange
+	Stats   Stats
+}
+
+type Stats struct {
+	Total  uint16
+	Opened uint16
+	Closed uint16
 }
 
 type ScannedPort struct {
@@ -29,7 +36,7 @@ func NewScanner(host, ports string) (*Scanner, error) {
 		return nil, err
 	}
 
-	portRanges, err := parsePorts(ports)
+	portRanges, totalPorts, err := parsePorts(ports)
 	if err != nil {
 		return nil, err
 	}
@@ -37,17 +44,22 @@ func NewScanner(host, ports string) (*Scanner, error) {
 	return &Scanner{
 		ports:   portRanges,
 		address: ip,
+		Stats: Stats{
+			Total:  uint16(totalPorts),
+			Closed: 0,
+			Opened: 0,
+		},
 	}, nil
 }
 
-func (s *Scanner) Scan() ([]ScannedPort, error) {
+func (s *Scanner) Scan(p *Printer) ([]ScannedPort, error) {
 	jobs := make(chan uint16, workerCount)
 	results := make(chan ScannedPort)
 	scannedPorts := make([]ScannedPort, 0)
 	var wg sync.WaitGroup
 
 	// Worker
-	for i := 0; i <= workerCount; i++ {
+	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		go s.worker(jobs, results, &wg)
 	}
@@ -57,14 +69,16 @@ func (s *Scanner) Scan() ([]ScannedPort, error) {
 	go func() {
 		for result := range results {
 			scannedPorts = append(scannedPorts, result)
+			s.increaseStats(result.Opened)
+			p.OutputPort(result.Port, result.Opened)
 		}
 		done <- true
 	}()
 
 	// Producer
 	for _, portRange := range s.ports {
-		for port := portRange.Start; port <= portRange.End; port++ {
-			jobs <- port
+		for port := int(portRange.Start); port <= int(portRange.End); port++ {
+			jobs <- uint16(port)
 		}
 	}
 	close(jobs)
@@ -93,5 +107,13 @@ func (s *Scanner) worker(jobs <-chan uint16, results chan<- ScannedPort, wg *syn
 		result := ScannedPort{Port: port, Opened: err == nil}
 
 		results <- result
+	}
+}
+
+func (s *Scanner) increaseStats(opened bool) {
+	if opened == true {
+		s.Stats.Opened++
+	} else {
+		s.Stats.Closed++
 	}
 }
