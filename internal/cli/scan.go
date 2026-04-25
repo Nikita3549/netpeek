@@ -34,14 +34,14 @@ func runScan(cmd *cobra.Command, args []string) error {
 
 	p := scanner.NewPrinter(s.Stats.Total)
 	p.OutputInitialText(host, ports)
-	defer trackTime(time.Now(), "Scanning", p, s)
+	defer trackTime(time.Now(), p, s)
 
 	_, err = s.Scan(p)
 
 	return err
 }
 
-func trackTime(now time.Time, name string, p *scanner.Printer, s *scanner.Scanner) {
+func trackTime(now time.Time, p *scanner.Printer, s *scanner.Scanner) {
 	elapsed := time.Since(now).Seconds()
 	p.OutputFinalStats(s.Stats.Opened, s.Stats.Closed, elapsed)
 }
