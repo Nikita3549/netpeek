@@ -1,4 +1,4 @@
-module netpeek
+module github.com/Nikita3549/netpeek
 
 go 1.26
 
