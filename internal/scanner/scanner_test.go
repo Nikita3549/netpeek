@@ -6,6 +6,8 @@ import (
 )
 
 func TestScanner_Integration(t *testing.T) {
+	p := NewPrinter(100)
+
 	t.Run("Scan Opened Port", func(t *testing.T) {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
@@ -29,7 +31,7 @@ func TestScanner_Integration(t *testing.T) {
 			t.Fatalf("NewScanner(%v, %v) failed: %v", host, port, err)
 		}
 
-		results, err := scanner.Scan()
+		results, err := scanner.Scan(p)
 		if err != nil {
 			t.Fatalf("Scan() failed: %v", err)
 			return
@@ -58,7 +60,7 @@ func TestScanner_Integration(t *testing.T) {
 			t.Fatalf("NewScanner(%v, %v) failed: %v", host, port, err)
 		}
 
-		results, err := scanner.Scan()
+		results, err := scanner.Scan(p)
 		if err != nil {
 			t.Fatalf("Scan() failed: %v", err)
 			return

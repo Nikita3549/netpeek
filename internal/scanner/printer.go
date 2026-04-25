@@ -33,7 +33,7 @@ func (p *Printer) OutputPort(port uint16, open bool) {
 	}
 
 	fmt.Fprintf(os.Stderr, "\r\033[K")
-	fmt.Fprintf(os.Stdout, "\033[32mOPEN\033[0m  %d/tcp   \033[36m%s\033[0m\n", port)
+	fmt.Fprintf(os.Stdout, "\033[32mOPEN\033[0m  %d/tcp   \033[36m%s\033[0m\n", port, "")
 }
 
 func (p *Printer) OutputFinalStats(opened, closed uint16, elapsed float64) {
