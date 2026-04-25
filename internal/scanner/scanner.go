@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-const defaultDialTimeout = 500 * time.Millisecond
-const defaultWorkerCount = 1024
+const DefaultDialTimeout = 500 * time.Millisecond
+const DefaultWorkerCount = 1024
 
 type Scanner struct {
 	Stats   Stats
@@ -42,7 +42,7 @@ func NewScanner(host, ports string, options ...Option) (*Scanner, error) {
 		return nil, err
 	}
 
-	conf := Config{workerCount: defaultWorkerCount, dialTimeout: defaultDialTimeout}
+	conf := Config{workerCount: DefaultWorkerCount, dialTimeout: DefaultDialTimeout}
 	for _, option := range options {
 		option(&conf)
 	}

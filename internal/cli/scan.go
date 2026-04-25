@@ -15,8 +15,8 @@ var timeout int
 func init() {
 	scanCmd.Flags().StringVarP(&ports, "port", "p", "", "Ports to scan (e.g., 'all', '80', '80-443', '80,82')")
 	scanCmd.Flags().StringVarP(&host, "host", "H", "", "Host to scan")
-	scanCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 0, "Goroutine workers for scanning")
-	scanCmd.Flags().IntVarP(&timeout, "timeout", "t", 0, "Timeout per port scanning")
+	scanCmd.Flags().IntVarP(&concurrency, "concurrency", "c", scanner.DefaultWorkerCount, "Goroutine workers for scanning")
+	scanCmd.Flags().IntVarP(&timeout, "timeout", "t", int(scanner.DefaultDialTimeout.Milliseconds()), "Timeout per port scanning")
 
 	scanCmd.MarkFlagRequired("host")
 	scanCmd.MarkFlagRequired("port")
