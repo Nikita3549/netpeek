@@ -16,7 +16,7 @@ open    closed    elapsed
 ## Install
 
 ```bash
-go install github.com/Nikita3549/netpeek/cmd/netpeek@latest
+go install github.com/Nikita3549/netpeek/cmd/netpeek@v0.1.0
 ```
 
 ## Usage
