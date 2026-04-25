@@ -10,13 +10,14 @@ import (
 	"time"
 )
 
-const dialTimeout = 500 * time.Millisecond
-const workerCount = 1024
+const defaultDialTimeout = 500 * time.Millisecond
+const defaultWorkerCount = 1024
 
 type Scanner struct {
+	Stats   Stats
 	address netip.Addr
 	ports   []PortRange
-	Stats   Stats
+	config  Config
 }
 
 type Stats struct {
@@ -30,7 +31,7 @@ type ScannedPort struct {
 	Opened bool
 }
 
-func NewScanner(host, ports string) (*Scanner, error) {
+func NewScanner(host, ports string, options ...Option) (*Scanner, error) {
 	ip, err := resolveIP(host)
 	if err != nil {
 		return nil, err
@@ -41,9 +42,15 @@ func NewScanner(host, ports string) (*Scanner, error) {
 		return nil, err
 	}
 
+	conf := Config{workerCount: defaultWorkerCount, dialTimeout: defaultDialTimeout}
+	for _, option := range options {
+		option(&conf)
+	}
+
 	return &Scanner{
 		ports:   portRanges,
 		address: ip,
+		config:  conf,
 		Stats: Stats{
 			Total:  uint16(totalPorts),
 			Closed: 0,
@@ -53,13 +60,13 @@ func NewScanner(host, ports string) (*Scanner, error) {
 }
 
 func (s *Scanner) Scan(p *Printer) ([]ScannedPort, error) {
-	jobs := make(chan uint16, workerCount)
+	jobs := make(chan uint16, s.config.workerCount)
 	results := make(chan ScannedPort)
 	scannedPorts := make([]ScannedPort, 0)
 	var wg sync.WaitGroup
 
 	// Worker
-	for i := 0; i < workerCount; i++ {
+	for i := 0; i < s.config.workerCount; i++ {
 		wg.Add(1)
 		go s.worker(jobs, results, &wg)
 	}
@@ -96,7 +103,7 @@ func (s *Scanner) Scan(p *Printer) ([]ScannedPort, error) {
 
 func (s *Scanner) worker(jobs <-chan uint16, results chan<- ScannedPort, wg *sync.WaitGroup) {
 	defer wg.Done()
-	dialer := net.Dialer{Timeout: dialTimeout}
+	dialer := net.Dialer{Timeout: s.config.dialTimeout}
 
 	for port := range jobs {
 		address := net.JoinHostPort(s.address.String(), fmt.Sprint(port))
