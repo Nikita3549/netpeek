@@ -1,8 +1,9 @@
 package main
 
 import (
-	"netpeek/internal/cli"
 	"os"
+
+	"github.com/Nikita3549/netpeek/internal/cli"
 )
 
 func main() {

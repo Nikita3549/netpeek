@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"netpeek/internal/scanner"
 	"time"
+
+	"github.com/Nikita3549/netpeek/internal/scanner"
 
 	"github.com/spf13/cobra"
 )
