@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"netpeek/internal/scanner"
 	"time"
 
@@ -13,10 +14,11 @@ var concurrency int
 var timeout int
 
 func init() {
-	scanCmd.Flags().StringVarP(&ports, "port", "p", "", "Ports to scan (e.g., 'all', '80', '80-443', '80,82')")
+	scanCmd.Flags().StringVarP(&ports, "port", "p", "", "Ports to scan: 'all', '80', '1-1024', '80,443,8080'")
 	scanCmd.Flags().StringVarP(&host, "host", "H", "", "Host to scan")
-	scanCmd.Flags().IntVarP(&concurrency, "concurrency", "c", scanner.DefaultWorkerCount, "Goroutine workers for scanning")
-	scanCmd.Flags().IntVarP(&timeout, "timeout", "t", int(scanner.DefaultDialTimeout.Milliseconds()), "Timeout per port scanning")
+	scanCmd.Flags().IntVarP(&concurrency, "concurrency", "c", scanner.DefaultWorkerCount, fmt.Sprintf("Number of concurrent goroutines (default %v)", scanner.DefaultWorkerCount))
+	defaultDialTimeout := int(scanner.DefaultDialTimeout.Milliseconds())
+	scanCmd.Flags().IntVarP(&timeout, "timeout", "t", defaultDialTimeout, fmt.Sprintf("Timeout per port in milliseconds (default %v)", defaultDialTimeout))
 
 	scanCmd.MarkFlagRequired("host")
 	scanCmd.MarkFlagRequired("port")
@@ -25,7 +27,12 @@ func init() {
 }
 
 var scanCmd = &cobra.Command{
-	Use:  "scan",
+	Use:   "scan",
+	Short: "Scan ports on a target host",
+	Long:  "Scan TCP ports on a given host. Supports single ports, ranges, and comma-separated lists.",
+	Example: `  netpeek scan -H localhost -p all
+  netpeek scan -H 192.168.1.1 -p 80,443
+  netpeek scan -H example.com -p 1-1024 -c 500 -t 1000`,
 	RunE: runScan,
 }
 

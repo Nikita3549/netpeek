@@ -5,8 +5,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Long: "Coming soon...",
-	Args: cobra.NoArgs,
+	Use:   "netpeek",
+	Short: "Fast TCP port scanner",
+	Long:  "netpeek is a fast and lightweight TCP port scanner written in Go.",
+	Args:  cobra.NoArgs,
 }
 
 func Execute() error {

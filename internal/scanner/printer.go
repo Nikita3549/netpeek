@@ -40,10 +40,10 @@ func (p *Printer) OutputFinalStats(opened, closed uint16, elapsed float64) {
 	fmt.Fprintf(os.Stderr, "\r\033[K")
 
 	fmt.Fprintf(os.Stdout, "\n")
-	fmt.Fprintf(os.Stdout, "\033[32m%-6d\033[0m  \033[31m%-8d\033[0m  \033[34m%.2fs\033[0m\n",
-		opened, closed, elapsed)
 	fmt.Fprintf(os.Stdout, "\033[90m%-6s  %-8s  %-6s\033[0m\n",
 		"open", "closed", "elapsed")
+	fmt.Fprintf(os.Stdout, "\033[32m%-6d\033[0m  \033[31m%-8d\033[0m  \033[34m%.2fs\033[0m\n",
+		opened, closed, elapsed)
 }
 
 func (p *Printer) renderOutput(pct, filled int) {
